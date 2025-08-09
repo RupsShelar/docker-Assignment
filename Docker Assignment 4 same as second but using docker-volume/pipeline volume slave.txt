@@ -1,0 +1,37 @@
+pipeline {
+    agent none
+
+    stages {
+        stage('Prepare & Deploy on Slave1') {
+            agent { label 'slave1' }
+            steps {
+                script {
+                    sh '''
+                    docker volume create vol_q1 || true
+                    docker rm -f container_q1 || true
+                    rm -rf repo_q1
+                    git clone -b 2025Q1 https://github.com/RupsShelar/docker-branches3.git repo_q1
+                    docker run --rm -v $PWD/repo_q1:/src -v vol_q1:/dest busybox sh -c 'cp /src/index.html /dest/'
+                    docker run -d --name container_q1 -p 80:80 -v vol_q1:/usr/local/apache2/htdocs:ro httpd:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Prepare & Deploy on Slave2') {
+            agent { label 'slave2' }
+            steps {
+                script {
+                    sh '''
+                    docker volume create vol_q2 || true
+                    docker rm -f container_q2 || true
+                    rm -rf repo_q2
+                    git clone -b 2025Q2 https://github.com/RupsShelar/docker-branches3.git repo_q2
+                    docker run --rm -v $PWD/repo_q2:/src -v vol_q2:/dest busybox sh -c 'cp /src/index.html /dest/'
+                    docker run -d --name container_q2 -p 90:80 -v vol_q2:/usr/local/apache2/htdocs:ro httpd:latest
+                    '''
+                }
+            }
+        }
+    }
+}
