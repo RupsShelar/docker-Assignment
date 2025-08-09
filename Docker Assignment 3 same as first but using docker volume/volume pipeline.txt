@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Prepare Volumes & Repos') {
+            steps {
+                script {
+                    sh '''
+                    docker volume create vol_q1 || true
+                    docker volume create vol_q2 || true
+                    docker volume create vol_q3 || true
+
+                    docker rm -f container_q1 container_q2 container_q3 || true
+
+                    rm -rf repo_q1 repo_q2 repo_q3
+
+                    git clone -b 2025Q1 https://github.com/RupsShelar/docker-branches3.git repo_q1
+                    git clone -b 2025Q2 https://github.com/RupsShelar/docker-branches3.git repo_q2
+                    git clone -b 2025Q3 https://github.com/RupsShelar/docker-branches3.git repo_q3
+
+                    docker run --rm -v $(pwd)/repo_q1:/src -v vol_q1:/dest busybox sh -c "cp /src/index.html /dest/"
+                    docker run --rm -v $(pwd)/repo_q2:/src -v vol_q2:/dest busybox sh -c "cp /src/index.html /dest/"
+                    docker run --rm -v $(pwd)/repo_q3:/src -v vol_q3:/dest busybox sh -c "cp /src/index.html /dest/"
+                    '''
+                }
+            }
+        }
+        stage('Run Containers') {
+            steps {
+                script {
+                    sh '''
+                    docker run -d --name container_q1 -p 80:80 -v vol_q1:/usr/local/apache2/htdocs:ro httpd:latest
+                    docker run -d --name container_q2 -p 90:80 -v vol_q2:/usr/local/apache2/htdocs:ro httpd:latest
+                    docker run -d --name container_q3 -p 8080:80 -v vol_q3:/usr/local/apache2/htdocs:ro httpd:latest
+                    '''
+                }
+            }
+        }
+    }
+}
