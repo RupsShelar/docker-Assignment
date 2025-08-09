@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    stages {
+        stage('2025Q1') {
+            steps {
+                sh '''
+                    docker rm -f container_q1 || true
+                    rm -rf repo_q1
+                    git clone -b 2025Q1 https://github.com/RupsShelar/docker-branches3.git repo_q1
+                    docker run -d --name container_q1 -p 80:80 httpd:latest
+                    docker cp repo_q1/index.html container_q1:/usr/local/apache2/htdocs/index.html
+                '''
+            }
+        }
+        stage('2025Q2') {
+            steps {
+                sh '''
+                    docker rm -f container_q2 || true
+                    rm -rf repo_q2
+                    git clone -b 2025Q2 https://github.com/RupsShelar/docker-branches3.git repo_q2
+                    docker run -d --name container_q2 -p 90:80 httpd:latest
+                    docker cp repo_q2/index.html container_q2:/usr/local/apache2/htdocs/index.html
+                '''
+            }
+        }
+        stage('2025Q3') {
+            steps {
+                sh '''
+                    docker rm -f container_q3 || true
+                    rm -rf repo_q3
+                    git clone -b 2025Q3 https://github.com/RupsShelar/docker-branches3.git repo_q3
+                    docker run -d --name container_q3 -p 8080:80 httpd:latest
+                    docker cp repo_q3/index.html container_q3:/usr/local/apache2/htdocs/index.html
+                '''
+            }
+        }
+    }
+}
